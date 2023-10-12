@@ -6,6 +6,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import dev.oniyide.exception.NotRetryableException;
+import dev.oniyide.exception.RetryableException;
 import dev.oniyide.message.OrderCreated;
 import dev.oniyide.service.DispatchService;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +33,15 @@ public class OrderCreatedHandler
         {
             dispatchService.process(key, payload);
         }
+        catch (RetryableException e)
+        {
+            log.warn(" Retryable exception: {}", e.getMessage());
+            throw e;
+        }
         catch (Exception e)
         {
-            log.error("Processing failure", e);
+            log.error("NotRetryable exception: {}", e.getMessage());
+            throw new NotRetryableException(e);
         }
     }
 }
